@@ -1,4 +1,5 @@
 CM20256-Coursework-Type-inference
 *.hs
 *.sty
-*pdf
+*.pdf
+*.zip
