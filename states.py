@@ -1,3 +1,13 @@
+
+import random
+
+from terms import (
+    Term as Term,
+    Variable as Variable,
+    Abstraction as Abstraction,
+    Application as Application,
+)
+
 class State:
     def __init__(self, term) -> None:
         self.term = term
@@ -81,12 +91,6 @@ class State:
             # while N M ~>  [M . while N M] . [] . N . if
             #    M=self.memory[""].pop()
             #   N=self.memory[""].pop()
-            elif self.term.value == "print":
-                self.memory["out"].append(self.memory[""].pop())
-            elif self.term.value == "read":
-                self.memory[""].append(self.memory["in"].pop())
-            elif self.term.value == "rand":
-                self.memory[""].append(self.memory["rnd"].pop())
             elif "get" in self.term.value:
                 l = self.term.value.split()
                 # if l[0]=="get" way to check it actually is get in the right place.
@@ -119,3 +123,34 @@ class Special_Stack:
     def __init__(self, pop=None, append=None):
         self.append = append
         self.pop = pop
+
+
+def substitute(term, new_term, old_value):  # returns rather than works in place
+    # print("sub")
+    if isinstance(term, Variable):
+        # print("into variable")
+        if term.value == old_value:
+            # print("values are the same")
+            new_term.compose(substitute(term.next, new_term, old_value))
+            return new_term
+        else:
+            term.next = substitute(term.next, new_term, old_value)
+            return term
+    elif isinstance(term, Application):
+        term.function = substitute(term.function, new_term, old_value)
+        term.argument = substitute(term.argument, new_term, old_value)
+        return term
+    elif isinstance(term, Abstraction):
+        if term.value == old_value:
+            return term
+        else:
+            if new_term == None or term.value not in new_term.free_values():
+                term.body = substitute(term.body, new_term, old_value)
+                return term
+            else:
+                term.rename(term.value, generate_fresh())
+
+                return None
+    else:
+        # print("got to else")
+        return None
