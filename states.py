@@ -1,3 +1,12 @@
+import random
+from terms import (
+    Term as Term,
+    Variable as Variable,
+    Abstraction as Abstraction,
+    Application as Application,
+    substitute as substitute
+)
+
 class State:
     def __init__(self, term) -> None:
         self.term = term

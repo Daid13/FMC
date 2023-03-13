@@ -1,5 +1,5 @@
 import re
-import random
+
 from terms import (
     Term as Term,
     Variable as Variable,
@@ -14,35 +14,6 @@ TRINARYFUNCTIONS = ["if"]
 FUNCTIONS = BINARYFUNCTIONS + TRINARYFUNCTIONS
 
 
-def substitute(term, new_term, old_value):  # returns rather than works in place
-    # print("sub")
-    if isinstance(term, Variable):
-        # print("into variable")
-        if term.value == old_value:
-            # print("values are the same")
-            new_term.compose(substitute(term.next, new_term, old_value))
-            return new_term
-        else:
-            term.next = substitute(term.next, new_term, old_value)
-            return term
-    elif isinstance(term, Application):
-        term.function = substitute(term.function, new_term, old_value)
-        term.argument = substitute(term.argument, new_term, old_value)
-        return term
-    elif isinstance(term, Abstraction):
-        if term.value == old_value:
-            return term
-        else:
-            if new_term == None or term.value not in new_term.free_values():
-                term.body = substitute(term.body, new_term, old_value)
-                return term
-            else:
-                term.rename(term.value, generate_fresh())
-
-                return None
-    else:
-        # print("got to else")
-        return None
 
 
 def generate_fresh():
@@ -52,7 +23,7 @@ def generate_fresh():
     return next(iter(valid))
 
 
-def base_parse(s):
+def base_parse(s):#str->term
     l = s.split(".")
     # print(l)
     temp = bpr(l)
@@ -60,7 +31,7 @@ def base_parse(s):
     return temp
 
 
-def bpr(l):
+def bpr(l):#list->term
     if l:
         t = l.pop(0)
         if "<" in t:
@@ -83,7 +54,7 @@ def bpr(l):
         return None
 
 
-def inter_parse(s):
+def inter_parse(s):#str->term
     # desired data structure:
     stack = []
 
@@ -100,52 +71,36 @@ def inter_parse(s):
     return ipr(stack)
 
 
-def ipr(l):
-    # print(l)
-    s = ""
-    for a in l:
-        if isinstance(a, list):
-            s += ipr(a)
-        else:
-            s += a
-
-    # do operations here
-    def do_operations(s):  # str to str
+def ipr(l):#list->term
+    def do_operations(s):  # str to term
         if ";" in s:
             l = s.split(";")
             # print(l)
-            t = base_parse(do_operations(l[0]))
-            t.compose(base_parse(do_operations(l[1])))
-            return str(t)
+            t = do_operations(l[0])
+            t.compose(do_operations(l[1]))
+            return t
         elif ":" in s:
             l = s.split(":=")
             location = l[0]
             value = l[1]
             # print(l)
-            return str(
-                Abstraction(
+            return Abstraction(
                     location, "_", Application(location, None, base_parse(value))
                 )
-            )
-
         elif "=" in s:  # some other expressions include = so this must be done after
             l = s.split("=")
-            return "[" + do_operations(l[1]) + "].<" + l[0] + ">"
+            return base_parse("[" + do_operations(l[1]) + "].<" + l[0] + ">")
 
-        return str(base_parse(s))  # should be able to remove both layers
+        return base_parse(s) # should be able to remove both layers
+    
+    # print(l)
+    s = ""
+    for a in l:
+        if isinstance(a, list):
+            s += str(ipr(a))#don't like this type change but can just be stripped out of this function
+        else:
+            s += str(a)
 
-    # Types of operations
-    # Binary: composition
-    # Single replace: huh?
-    # compose: term ; term
-    # update: location := term
-    # lookup: ! location
-
-    # set: set location
-    # get: get location
-    # rand:
-    # read:
-    # print
     return do_operations(s)
 
 
@@ -173,7 +128,7 @@ def run_demo():
 def run_second_demo():
     demo = "((read;read);+);print"
     print("This time doing the same using keywords instead")
-    start_term = base_parse(inter_parse(demo))
+    start_term = inter_parse(demo)
     current_state = State(start_term)
     print("hi")
     current_state.run()
