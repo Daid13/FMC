@@ -41,7 +41,7 @@ def bpr(l):#list->term
             return Abstraction(location, value, bpr(l))
         elif "[" in t:
             list1 = [t[1:]]
-            while "]" not in list1[-1]:  # this doesn'thandle nesting correctly
+            while "]" not in list1[-1]:  # this doesn't handle nesting correctly
                 list1.append(l.pop(0))
 
             temp = list1.pop().split("]")
@@ -68,8 +68,32 @@ def inter_parse(s):#str->term
             stack.append(temp_list)
         else:
             stack.append(c)
-    return ipr(stack)
+    return unpack_constants(ipr(stack))
 
+CONSTANTS = {
+    "print": "<x>.[x]out",
+    "read": "in<x>.[x]",
+    "rand": "rnd<x>.[x]",
+}
+
+def unpack_constants(t):#term to term
+    if isinstance(t, Variable):
+        if t.value in CONSTANTS:
+            temp=base_parse(CONSTANTS[t.value])
+            print("unp",temp, t.next)
+
+            temp.compose(unpack_constants(t.next))
+            print(t.value,CONSTANTS[t.value])
+            print("post",temp)
+            return temp
+        else:
+            t.next=unpack_constants(t.next)
+            return t
+    elif isinstance(t, Application):
+        return Application(t.location,unpack_constants(t.function),unpack_constants(t.argument))
+    elif isinstance(t, Abstraction):
+        return Abstraction(t.location, t.value, unpack_constants(t.body))
+    return None
 
 def ipr(l):#list->term
     def do_operations(s):  # str to term
@@ -89,7 +113,7 @@ def ipr(l):#list->term
                 )
         elif "=" in s:  # some other expressions include = so this must be done after
             l = s.split("=")
-            return base_parse("[" + do_operations(l[1]) + "].<" + l[0] + ">")
+            return base_parse("[" + str(do_operations(l[1])) + "].<" + l[0] + ">")#refactor
 
         return base_parse(s) # should be able to remove both layers
     
@@ -103,10 +127,10 @@ def ipr(l):#list->term
 
     return do_operations(s)
 
-
-# print(inter_parse("a:=2;(<x>.!a)(a:=3;0)"))
-# print(inter_parse("a:=2;([u].w).<y>.y"))
-# print(inter_parse("(x=N);M"))
+def run_inter_parse():
+    print(inter_parse("a:=2;(<x>.!a)(a:=3;0)"))
+    print(inter_parse("a:=2;([u].w).<y>.y"))
+    print(inter_parse("(x=N);M"))
 
 
 def run_demo():
@@ -129,6 +153,7 @@ def run_second_demo():
     demo = "((read;read);+);print"
     print("This time doing the same using keywords instead")
     start_term = inter_parse(demo)
+    print(start_term)
     current_state = State(start_term)
     print("hi")
     current_state.run()
@@ -143,7 +168,7 @@ def run_second_demo():
 # current_state.run()
 # test=Special_Stack(pop=lambda : int(input("integer input")))
 # print(test.pop())
-run_demo()
+#run_demo()
 run_second_demo()
 current_state = State(None)
 """

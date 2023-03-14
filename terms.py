@@ -56,8 +56,10 @@ class Application(Term):
     def compose(self, M):
         # print("app comp", str(self))
         if self.function:  # deal with none parsed as variable
+            print("composing with function",self,M)
             self.function.compose(M)
         else:
+            print("replacing None", M)
             self.function = M
         # print(str(self))
 
@@ -82,15 +84,18 @@ class Abstraction(Term):
         return self.location + "<" + self.value + ">." + str(self.body)
 
     def compose(self, M):  # this needs to also check something to do with freeness
-        if self.value in M.free_values():
+        if M and self.value in M.free_values():
             self.rename(self.value, generate_fresh())
         if self.body:
+            print("ab",self,M)
             self.body.compose(M)
         else:
             self.body = M
 
     def free_values(self):
-        return self.body.free_values().discard(self.value)
+        fv=self.body.free_values()
+        fv.discard(self.value)
+        return fv
 
     def rename(self, old, new):
         if self.value == old:

@@ -90,12 +90,7 @@ class State:
             # while N M ~>  [M . while N M] . [] . N . if
             #    M=self.memory[""].pop()
             #   N=self.memory[""].pop()
-            elif self.term.value == "print":
-                self.memory["out"].append(self.memory[""].pop())
-            elif self.term.value == "read":
-                self.memory[""].append(self.memory["in"].pop())
-            elif self.term.value == "rand":
-                self.memory[""].append(self.memory["rnd"].pop())
+            
             elif "get" in self.term.value:
                 l = self.term.value.split()
                 # if l[0]=="get" way to check it actually is get in the right place.
