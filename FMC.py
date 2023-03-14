@@ -1,5 +1,5 @@
 import re
-import random
+
 from terms import (
     Term as Term,
     Variable as Variable,
@@ -14,37 +14,6 @@ TRINARYFUNCTIONS = ["if"]
 FUNCTIONS = BINARYFUNCTIONS + TRINARYFUNCTIONS
 
 
-def substitute(term, new_term, old_value):  # returns rather than works in place
-    # print("sub")
-    if isinstance(term, Variable):
-        # print("into variable")
-        if term.value == old_value:
-            # print("values are the same")
-            new_term.compose(substitute(term.next, new_term, old_value))
-            return new_term
-        else:
-            term.next = substitute(term.next, new_term, old_value)
-            return term
-    elif isinstance(term, Application):
-        term.function = substitute(term.function, new_term, old_value)
-        term.argument = substitute(term.argument, new_term, old_value)
-        return term
-    elif isinstance(term, Abstraction):
-        if term.value == old_value:
-            return term
-        else:
-            if new_term == None or term.value not in new_term.free_values():
-                term.body = substitute(term.body, new_term, old_value)
-                return term
-            else:
-                term.rename(term.value, generate_fresh())
-
-                return None
-    else:
-        # print("got to else")
-        return None
-
-
 def generate_fresh():
     t = current_state.term
     used = t.used_values()
@@ -52,7 +21,7 @@ def generate_fresh():
     return next(iter(valid))
 
 
-def base_parse(s):
+def base_parse(s):  # str->term
     l = s.split(".")
     # print(l)
     temp = bpr(l)
@@ -60,7 +29,7 @@ def base_parse(s):
     return temp
 
 
-def bpr(l):
+def bpr(l):  # list->term
     if l:
         t = l.pop(0)
         if "<" in t:
@@ -70,7 +39,7 @@ def bpr(l):
             return Abstraction(location, value, bpr(l))
         elif "[" in t:
             list1 = [t[1:]]
-            while "]" not in list1[-1]:  # this doesn'thandle nesting correctly
+            while "]" not in list1[-1]:  # this doesn't handle nesting correctly
                 list1.append(l.pop(0))
 
             temp = list1.pop().split("]")
@@ -83,7 +52,7 @@ def bpr(l):
         return None
 
 
-def inter_parse(s):
+def inter_parse(s):  # str->term
     # desired data structure:
     stack = []
 
@@ -97,61 +66,79 @@ def inter_parse(s):
             stack.append(temp_list)
         else:
             stack.append(c)
-    return ipr(stack)
+    return unpack_constants(ipr(stack))
 
 
-def ipr(l):
-    # print(l)
-    s = ""
-    for a in l:
-        if isinstance(a, list):
-            s += ipr(a)
+CONSTANTS = {
+    "print": "<x>.[x]out",
+    "read": "in<x>.[x]",
+    "rand": "rnd<x>.[x]",
+}
+
+
+def unpack_constants(t):  # term to term
+    if isinstance(t, Variable):
+        if t.value in CONSTANTS:
+            temp = base_parse(CONSTANTS[t.value])
+            print("unp", temp, t.next)
+
+            temp.compose(unpack_constants(t.next))
+            print(t.value, CONSTANTS[t.value])
+            print("post", temp)
+            return temp
         else:
-            s += a
+            t.next = unpack_constants(t.next)
+            return t
+    elif isinstance(t, Application):
+        return Application(
+            t.location, unpack_constants(t.function), unpack_constants(t.argument)
+        )
+    elif isinstance(t, Abstraction):
+        return Abstraction(t.location, t.value, unpack_constants(t.body))
+    return None
 
-    # do operations here
-    def do_operations(s):  # str to str
+
+def ipr(l):  # list->term
+    def do_operations(s):  # str to term
         if ";" in s:
             l = s.split(";")
             # print(l)
-            t = base_parse(do_operations(l[0]))
-            t.compose(base_parse(do_operations(l[1])))
-            return str(t)
+            t = do_operations(l[0])
+            t.compose(do_operations(l[1]))
+            return t
         elif ":" in s:
             l = s.split(":=")
             location = l[0]
             value = l[1]
             # print(l)
-            return str(
-                Abstraction(
-                    location, "_", Application(location, None, base_parse(value))
-                )
+            return Abstraction(
+                location, "_", Application(location, None, base_parse(value))
             )
-
         elif "=" in s:  # some other expressions include = so this must be done after
             l = s.split("=")
-            return "[" + do_operations(l[1]) + "].<" + l[0] + ">"
+            return base_parse(
+                "[" + str(do_operations(l[1])) + "].<" + l[0] + ">"
+            )  # refactor
 
-        return str(base_parse(s))  # should be able to remove both layers
+        return base_parse(s)  # should be able to remove both layers
 
-    # Types of operations
-    # Binary: composition
-    # Single replace: huh?
-    # compose: term ; term
-    # update: location := term
-    # lookup: ! location
+    # print(l)
+    s = ""
+    for a in l:
+        if isinstance(a, list):
+            s += str(
+                ipr(a)
+            )  # don't like this type change but can just be stripped out of this function
+        else:
+            s += str(a)
 
-    # set: set location
-    # get: get location
-    # rand:
-    # read:
-    # print
     return do_operations(s)
 
 
-# print(inter_parse("a:=2;(<x>.!a)(a:=3;0)"))
-# print(inter_parse("a:=2;([u].w).<y>.y"))
-# print(inter_parse("(x=N);M"))
+def run_inter_parse():
+    print(inter_parse("a:=2;(<x>.!a)(a:=3;0)"))
+    print(inter_parse("a:=2;([u].w).<y>.y"))
+    print(inter_parse("(x=N);M"))
 
 
 def run_demo():
@@ -173,7 +160,8 @@ def run_demo():
 def run_second_demo():
     demo = "((read;read);+);print"
     print("This time doing the same using keywords instead")
-    start_term = base_parse(inter_parse(demo))
+    start_term = inter_parse(demo)
+    print(start_term)
     current_state = State(start_term)
     print("hi")
     current_state.run()
@@ -188,7 +176,7 @@ def run_second_demo():
 # current_state.run()
 # test=Special_Stack(pop=lambda : int(input("integer input")))
 # print(test.pop())
-run_demo()
+# run_demo()
 run_second_demo()
 current_state = State(None)
 """
