@@ -4,8 +4,9 @@ from terms import (
     Variable as Variable,
     Abstraction as Abstraction,
     Application as Application,
-    substitute as substitute
+    substitute as substitute,
 )
+
 
 class State:
     def __init__(self, term) -> None:
@@ -90,7 +91,7 @@ class State:
             # while N M ~>  [M . while N M] . [] . N . if
             #    M=self.memory[""].pop()
             #   N=self.memory[""].pop()
-            
+
             elif "get" in self.term.value:
                 l = self.term.value.split()
                 # if l[0]=="get" way to check it actually is get in the right place.

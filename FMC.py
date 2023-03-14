@@ -14,8 +14,6 @@ TRINARYFUNCTIONS = ["if"]
 FUNCTIONS = BINARYFUNCTIONS + TRINARYFUNCTIONS
 
 
-
-
 def generate_fresh():
     t = current_state.term
     used = t.used_values()
@@ -23,7 +21,7 @@ def generate_fresh():
     return next(iter(valid))
 
 
-def base_parse(s):#str->term
+def base_parse(s):  # str->term
     l = s.split(".")
     # print(l)
     temp = bpr(l)
@@ -31,7 +29,7 @@ def base_parse(s):#str->term
     return temp
 
 
-def bpr(l):#list->term
+def bpr(l):  # list->term
     if l:
         t = l.pop(0)
         if "<" in t:
@@ -54,7 +52,7 @@ def bpr(l):#list->term
         return None
 
 
-def inter_parse(s):#str->term
+def inter_parse(s):  # str->term
     # desired data structure:
     stack = []
 
@@ -70,32 +68,37 @@ def inter_parse(s):#str->term
             stack.append(c)
     return unpack_constants(ipr(stack))
 
+
 CONSTANTS = {
     "print": "<x>.[x]out",
     "read": "in<x>.[x]",
     "rand": "rnd<x>.[x]",
 }
 
-def unpack_constants(t):#term to term
+
+def unpack_constants(t):  # term to term
     if isinstance(t, Variable):
         if t.value in CONSTANTS:
-            temp=base_parse(CONSTANTS[t.value])
-            print("unp",temp, t.next)
+            temp = base_parse(CONSTANTS[t.value])
+            print("unp", temp, t.next)
 
             temp.compose(unpack_constants(t.next))
-            print(t.value,CONSTANTS[t.value])
-            print("post",temp)
+            print(t.value, CONSTANTS[t.value])
+            print("post", temp)
             return temp
         else:
-            t.next=unpack_constants(t.next)
+            t.next = unpack_constants(t.next)
             return t
     elif isinstance(t, Application):
-        return Application(t.location,unpack_constants(t.function),unpack_constants(t.argument))
+        return Application(
+            t.location, unpack_constants(t.function), unpack_constants(t.argument)
+        )
     elif isinstance(t, Abstraction):
         return Abstraction(t.location, t.value, unpack_constants(t.body))
     return None
 
-def ipr(l):#list->term
+
+def ipr(l):  # list->term
     def do_operations(s):  # str to term
         if ";" in s:
             l = s.split(";")
@@ -109,23 +112,28 @@ def ipr(l):#list->term
             value = l[1]
             # print(l)
             return Abstraction(
-                    location, "_", Application(location, None, base_parse(value))
-                )
+                location, "_", Application(location, None, base_parse(value))
+            )
         elif "=" in s:  # some other expressions include = so this must be done after
             l = s.split("=")
-            return base_parse("[" + str(do_operations(l[1])) + "].<" + l[0] + ">")#refactor
+            return base_parse(
+                "[" + str(do_operations(l[1])) + "].<" + l[0] + ">"
+            )  # refactor
 
-        return base_parse(s) # should be able to remove both layers
-    
+        return base_parse(s)  # should be able to remove both layers
+
     # print(l)
     s = ""
     for a in l:
         if isinstance(a, list):
-            s += str(ipr(a))#don't like this type change but can just be stripped out of this function
+            s += str(
+                ipr(a)
+            )  # don't like this type change but can just be stripped out of this function
         else:
             s += str(a)
 
     return do_operations(s)
+
 
 def run_inter_parse():
     print(inter_parse("a:=2;(<x>.!a)(a:=3;0)"))
@@ -168,7 +176,7 @@ def run_second_demo():
 # current_state.run()
 # test=Special_Stack(pop=lambda : int(input("integer input")))
 # print(test.pop())
-#run_demo()
+# run_demo()
 run_second_demo()
 current_state = State(None)
 """
