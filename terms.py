@@ -104,6 +104,10 @@ class Abstraction(Term):
 
     def used_values(self):
         return self.body.used_values() | {self.value}
+    
+    def reduce(self):
+        if isinstance(self.body,)
+
 
 
 def substitute(term, new_term, old_value):  # returns rather than works in place
