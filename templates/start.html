@@ -1,0 +1,29 @@
+{# templates/start.html #}
+
+<!DOCTYPE html>
+
+<body>
+    <h1>FMC Demo</h1>
+    <p>
+        <a href="/"> new input </a> <br>
+        {{current_state.term}}  <a href="" step></a>
+        <br>
+        {{operation_result}}
+        <br>
+        {% for stack in current_state.memory %}
+            {% if stack not in ["in", "out", "rnd"] %}
+            
+            <table>
+                
+                {% for term in current_state.memory[stack] %}
+                <tr>
+                    <td>{{term}}</td>
+                </tr>
+                {% endfor %}
+                <tr><th><strong>{{stack}}</strong></th></tr>
+            </table>
+            {% endif %}
+        {% endfor %}
+    </p>
+
+</body>

@@ -77,7 +77,6 @@ class State:
                         self.memory[""].pop().value and self.memory[""].pop().value
                     )
                 )
-
             elif (
                 self.term.value == "if"
             ):  # warning, without type checking most things other than 0 will be true.
