@@ -2,6 +2,10 @@ class Term:
     def __init__(self, location):
         self.location = location
 
+
+    def copy(self):
+        return base_parse(str(self))
+
     def compose():
         pass
 

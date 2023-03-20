@@ -6,7 +6,7 @@
     <h1>FMC Demo</h1>
     <p>
         <a href="/"> new input </a> <br>
-        {{current_state.term}}  <a href="" step></a>
+        {{current_state.term}}  <form action="/home/{{inp}}" method="POST" id="next" name="next"><button type="submit" name="next" value="step">step</button><button type="submit" name="next" value="confirm">confirm</button></form>
         <br>
         {{operation_result}}
         <br>
