@@ -21,8 +21,6 @@ def generate_fresh():
     return next(iter(valid))
 
 
-
-
 def run_inter_parse():
     print(inter_parse("a:=2;(<x>.!a)(a:=3;0)"))
     print(inter_parse("a:=2;([u].w).<y>.y"))
@@ -65,8 +63,8 @@ def run_second_demo():
 # test=Special_Stack(pop=lambda : int(input("integer input")))
 # print(test.pop())
 # run_demo()
-#run_second_demo()
-#current_state = State(None)
+# run_second_demo()
+# current_state = State(None)
 """
 l2=Variable("a", "x")
 l1=Variable("a", "y", l2)

@@ -2,7 +2,6 @@ class Term:
     def __init__(self, location):
         self.location = location
 
-
     def copy(self):
         return base_parse(str(self))
 
@@ -111,7 +110,7 @@ class Abstraction(Term):
 
 
 def substitute(term, new_term, old_value):  # returns rather than works in place
-    new_term=base_parse(str(new_term))
+    new_term = base_parse(str(new_term))
     # print("sub")
     if isinstance(term, Variable):
         # print("into variable")
@@ -140,7 +139,6 @@ def substitute(term, new_term, old_value):  # returns rather than works in place
     else:
         # print("got to else")
         return None
-    
 
 
 def base_parse(s):  # str->term

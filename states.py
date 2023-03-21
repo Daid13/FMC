@@ -12,11 +12,13 @@ class State:
     def __init__(self, term, memory=None) -> None:
         self.term = term
         if memory:
-            self.memory=memory
+            self.memory = memory
         else:
             self.memory = {
                 "in": Special_Stack(pop=lambda: Variable(int(input("integer input")))),
-                "out": Special_Stack(append=lambda o: print("output stream: " + str(o))),
+                "out": Special_Stack(
+                    append=lambda o: print("output stream: " + str(o))
+                ),
                 "rnd": Special_Stack(
                     pop=random.randint(1, 100)
                 ),  # arbitrary to pick 1-100 as range
