@@ -2,6 +2,9 @@ class Term:
     def __init__(self, location):
         self.location = location
 
+    def copy(self):
+        return base_parse(str(self))
+
     def compose():
         pass
 
@@ -107,6 +110,7 @@ class Abstraction(Term):
 
 
 def substitute(term, new_term, old_value):  # returns rather than works in place
+    new_term = base_parse(str(new_term))
     # print("sub")
     if isinstance(term, Variable):
         # print("into variable")
@@ -135,3 +139,117 @@ def substitute(term, new_term, old_value):  # returns rather than works in place
     else:
         # print("got to else")
         return None
+
+
+def base_parse(s):  # str->term
+    l = s.split(".")
+    # print(l)
+    temp = bpr(l)
+    # print(temp)
+    return temp
+
+
+def bpr(l):  # list->term
+    if l:
+        t = l.pop(0)
+        if "<" in t:
+            temp = t.split("<")
+            location = temp[0]
+            value = temp[1][:-1]  # getting rid of >
+            return Abstraction(location, value, bpr(l))
+        elif "[" in t:
+            list1 = [t[1:]]
+            while "]" not in list1[-1]:  # this doesn't handle nesting correctly
+                list1.append(l.pop(0))
+
+            temp = list1.pop().split("]")
+            list1.append(temp[0])
+            location = temp[1]
+            return Application(location, bpr(l), bpr(list1))
+        elif t != "None":
+            return Variable(t, bpr(l))
+    else:
+        return None
+
+
+def inter_parse(s):  # str->term
+    # desired data structure:
+    stack = []
+
+    for c in s:
+        if c == ")":
+            temp_list = []
+            while stack[-1] != "(":
+                temp_list.append(stack.pop())
+            stack.pop()
+            temp_list.reverse()
+            stack.append(temp_list)
+        else:
+            stack.append(c)
+    return unpack_constants(ipr(stack))
+
+
+CONSTANTS = {
+    "print": "<x>.[x]out",
+    "read": "in<x>.[x]",
+    "rand": "rnd<x>.[x]",
+}
+
+
+def unpack_constants(t):  # term to term
+    if isinstance(t, Variable):
+        if t.value in CONSTANTS:
+            temp = base_parse(CONSTANTS[t.value])
+            print("unp", temp, t.next)
+
+            temp.compose(unpack_constants(t.next))
+            print(t.value, CONSTANTS[t.value])
+            print("post", temp)
+            return temp
+        else:
+            t.next = unpack_constants(t.next)
+            return t
+    elif isinstance(t, Application):
+        return Application(
+            t.location, unpack_constants(t.function), unpack_constants(t.argument)
+        )
+    elif isinstance(t, Abstraction):
+        return Abstraction(t.location, t.value, unpack_constants(t.body))
+    return None
+
+
+def ipr(l):  # list->term
+    def do_operations(s):  # str to term
+        if ";" in s:
+            l = s.split(";")
+            # print(l)
+            t = do_operations(l[0])
+            t.compose(do_operations(l[1]))
+            return t
+        elif ":" in s:
+            l = s.split(":=")
+            location = l[0]
+            value = l[1]
+            # print(l)
+            return Abstraction(
+                location, "_", Application(location, None, base_parse(value))
+            )
+        elif "=" in s:  # some other expressions include = so this must be done after
+            l = s.split("=")
+            return base_parse(
+                "[" + str(do_operations(l[1])) + "].<" + l[0] + ">"
+            )  # refactor
+
+        return base_parse(s)  # should be able to remove both layers
+
+    # print(l)
+    s = ""
+    for a in l:
+        if isinstance(a, list):
+            s += str(
+                ipr(a)
+            )  # don't like this type change but can just be stripped out of this function
+        else:
+            s += str(a)
+
+    return do_operations(s)
