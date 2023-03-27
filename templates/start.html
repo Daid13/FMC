@@ -11,11 +11,12 @@
         {{operation_result}}
         <br>
         {% for stack in current_state.memory %}
+            <div>
             {% if stack not in ["in", "out", "rnd"] %}
             
             <table>
                 
-                {% for term in current_state.memory[stack] %}
+                {% for term in current_state.memory[stack][::-1] %}
                 <tr>
                     <td>{{term}}</td>
                 </tr>
@@ -23,6 +24,7 @@
                 <tr><th><strong>{{stack}}</strong></th></tr>
             </table>
             {% endif %}
+            </div>
         {% endfor %}
     </p>
 

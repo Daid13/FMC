@@ -58,11 +58,13 @@ def home(inp):
                 resp.set_cookie("context", jsonpickle.encode(context))
                 resp.set_cookie("action", "")
             elif request.cookies.get("action") == "":
+                resp = make_response(render_template("start.html", **context))
                 pass  # currently no action but maybe error message
     else:
         inp_term = {
             "addition": "in<x>.c<_>.[x].in<y>.[y]c.[y].+.<p>.[p]out",
             "stack": "[1].[2].<x>.<y>.x.x.+.y.+",
+            "multiplestacks":"[1]a.[2]b.[3]c.[4].[5].[6]b.[7]a.+",
         }
         print("in create")
         current_state = states.State(terms.base_parse(inp_term[inp]))
