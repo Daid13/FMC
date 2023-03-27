@@ -64,7 +64,7 @@ def home(inp):
         inp_term = {
             "addition": "in<x>.c<_>.[x].in<y>.[y]c.[y].+.<p>.[p]out",
             "stack": "[1].[2].<x>.<y>.x.x.+.y.+",
-            "multiplestacks":"[1]a.[2]b.[3]c.[4].[5].[6]b.[7]a.+",
+            "multiplestacks": "[1]a.[2]b.[3]c.[4].[5].[6]b.[7]a.+",
         }
         print("in create")
         current_state = states.State(terms.base_parse(inp_term[inp]))
