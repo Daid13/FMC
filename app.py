@@ -29,10 +29,16 @@ def start():
 
 @app.route("/input/", methods=["GET"])
 def input():
-    inp = request.args.get(
-        "input"
-    )  # possibly add extra step of going via dict to get actual start term
-    return redirect(url_for("home", inp=inp))
+    if request.args.get("input"):
+        inp = request.args.get(
+            "input"
+        )  # possibly add extra step of going via dict to get actual start term
+        return redirect(url_for("home", inp=inp))
+    else:
+        inp=request.args.get("term_input")
+        print(inp)
+        inp=terms.base_parse(inp)
+        print(inp)
 
 
 @app.route("/home/<inp>/", methods=["GET", "POST"])
