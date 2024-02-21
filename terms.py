@@ -1,25 +1,27 @@
+from typing import Optional
+
 class Term:
-    def __init__(self, location):
+    def __init__(self, location:str) -> None:
         self.location = location
 
-    def copy(self):
+    def copy(self) -> 'Term':
         return base_parse(str(self))
 
-    def compose():
+    def compose(self, M: 'Term') -> None:
         pass
 
-    def free_values(self):
+    def free_values(self) -> set:
         pass
 
-    def rename(self, old, new):
+    def rename(self, old: str, new: str) -> None:
         pass
 
-    def used_values(self):
+    def used_values(self) -> set:
         pass
 
 
 class Variable(Term):
-    def __init__(self, value, next=None):
+    def __init__(self, value: str, next: Optional[Term] = None) -> None:
         self.value = value
         self.next = next
 
@@ -29,26 +31,26 @@ class Variable(Term):
         else:
             return str(self.value)
 
-    def compose(self, M):
+    def compose(self, M: Term) -> None:
         if self.next:
             self.next.compose(M)
         else:
             self.next = M
 
-    def free_values(self):
+    def free_values(self) -> set:
         return {self.value}
 
-    def rename(self, old, new):
+    def rename(self, old: str, new: str) -> None:
         if self.value == old:
             self.value = new
 
-    def used_values(self):
+    def used_values(self) -> set:
         return {self.value}
 
 
 # M is function, N is argument, N will be in []
 class Application(Term):
-    def __init__(self, location, function, argument):
+    def __init__(self, location: str, function: Term, argument: Term) -> None:
         self.function = function
         self.argument = argument
         super().__init__(location)

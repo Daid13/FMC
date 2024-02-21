@@ -1,4 +1,5 @@
 import random
+from typing import Optional
 from terms import (
     Term as Term,
     Variable as Variable,
@@ -9,7 +10,7 @@ from terms import (
 
 
 class State:
-    def __init__(self, term, memory=None) -> None:
+    def __init__(self, term: Term, memory: Optional[dict] = None) -> None:
         self.term = term
         if memory:
             self.memory = memory
@@ -26,13 +27,13 @@ class State:
             }
 
     def __str__(self) -> str:
-        def print_stack(stack):
+        def print_stack(stack: list) -> str:
             stack_string = ""
             for t in stack:
                 stack_string += str(t) + ", "
             return "[" + stack_string[:-2] + "]"
 
-        def print_memory(memory):
+        def print_memory(memory: dict) -> str:
             memory_string = ""
             for location in memory:
                 if location not in ["in", "out", "rnd"]:
@@ -43,8 +44,7 @@ class State:
 
         return str(self.term) + "\n" + print_memory(self.memory)
 
-    def step(self):  # returns bool of success
-        # print(type(self.term))
+    def step(self) -> bool:  # returns bool of success
         if isinstance(self.term, Application):
             if self.term.location in self.memory:
                 self.memory[self.term.location].append(self.term.argument)
@@ -53,21 +53,16 @@ class State:
             self.term = self.term.function
             return True
         elif isinstance(self.term, Abstraction):
-            # print("hi")
-            # print(self.term)
             if self.term.location in self.memory:
                 temp = self.memory[self.term.location].pop()
             else:  # assumes an empty stack contains infinite Nones
                 temp = None
-            # print(temp,self.term.value)
             self.term = substitute(self.term.body, temp, self.term.value)
-            # print(self.term)
             return True
         elif isinstance(
             self.term, Variable
         ):  # all variables including stack operations
             # Evaluating constants at this point is valid however it would be better to do it else where
-            # print(self.term.value)
             if self.term.value == "+":  # addition, add print etc here?
                 self.memory[""].append(
                     Variable(self.memory[""].pop().value + self.memory[""].pop().value)
@@ -117,7 +112,7 @@ class State:
             print(self)
             return False
 
-    def run(self):
+    def run(self) -> None:
         step_result = True
         while step_result:
             step_result = self.step()
@@ -125,6 +120,6 @@ class State:
 
 
 class Special_Stack:
-    def __init__(self, pop=None, append=None):
+    def __init__(self, pop=None, append=None) -> None:
         self.append = append
         self.pop = pop
