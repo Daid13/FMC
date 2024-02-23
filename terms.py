@@ -58,29 +58,27 @@ class Application(Term):
     def __str__(self) -> str:
         return "[" + str(self.argument) + "]" + self.location + "." + str(self.function)
 
-    def compose(self, M):
-        # print("app comp", str(self))
+    def compose(self, M: Term) -> None:
         if self.function:  # deal with none parsed as variable
             print("composing with function", self, M)
             self.function.compose(M)
         else:
             print("replacing None", M)
             self.function = M
-        # print(str(self))
 
-    def free_values(self):
+    def free_values(self) -> set:
         return self.argument.free_values() | self.function.free_values()
 
-    def rename(self, old, new):
+    def rename(self, old: str, new: str) -> None:
         self.argument.rename(old, new)
         self.function.rename(old, new)
 
-    def used_values(self):
+    def used_values(self) -> set:
         return self.argument.used_values() | self.function.used_values()
 
 
 class Abstraction(Term):
-    def __init__(self, location, value, body):
+    def __init__(self, location:str, value:str, body:Term) -> None:
         self.value = value
         self.body = body
         super().__init__(location)
@@ -88,7 +86,7 @@ class Abstraction(Term):
     def __str__(self) -> str:
         return self.location + "<" + self.value + ">." + str(self.body)
 
-    def compose(self, M):  # this needs to also check something to do with freeness
+    def compose(self, M:Term) -> None:  # this needs to also check something to do with freeness
         if M and self.value in M.free_values():
             self.rename(self.value, generate_fresh())
         if self.body:
@@ -97,21 +95,21 @@ class Abstraction(Term):
         else:
             self.body = M
 
-    def free_values(self):
+    def free_values(self) -> None:
         fv = self.body.free_values()
         fv.discard(self.value)
         return fv
 
-    def rename(self, old, new):
+    def rename(self, old:str, new:str):
         if self.value == old:
             self.value = new
         self.body.rename(old, new)
 
-    def used_values(self):
+    def used_values(self) -> None:
         return self.body.used_values() | {self.value}
 
 
-def substitute(term, new_term, old_value):  # returns rather than works in place
+def substitute(term, new_term: Term, old_value: str) -> Term:  # returns rather than works in place
     new_term = base_parse(str(new_term))
     # print("sub")
     if isinstance(term, Variable):
@@ -143,7 +141,7 @@ def substitute(term, new_term, old_value):  # returns rather than works in place
         return None
 
 
-def base_parse(s):  # str->term
+def base_parse(s: str) -> Term:  # str->term
     l = s.split(".")
     # print(l)
     temp = bpr(l)
@@ -151,7 +149,7 @@ def base_parse(s):  # str->term
     return temp
 
 
-def bpr(l):  # list->term
+def bpr(l: list) -> Term:  # list->term
     if l:
         t = l.pop(0)
         if "<" in t:
@@ -174,7 +172,7 @@ def bpr(l):  # list->term
         return None
 
 
-def inter_parse(s):  # str->term
+def inter_parse(s: str) -> Term:  # str->term
     # desired data structure:
     stack = []
 
@@ -198,7 +196,7 @@ CONSTANTS = {
 }
 
 
-def unpack_constants(t):  # term to term
+def unpack_constants(t: Term) -> Term:  # term to term
     if isinstance(t, Variable):
         if t.value in CONSTANTS:
             temp = base_parse(CONSTANTS[t.value])
@@ -220,8 +218,8 @@ def unpack_constants(t):  # term to term
     return None
 
 
-def ipr(l):  # list->term
-    def do_operations(s):  # str to term
+def ipr(l: list) -> Term:  # list->term
+    def do_operations(s: str) -> Term:  # str to term
         if ";" in s:
             l = s.split(";")
             # print(l)
