@@ -1,13 +1,14 @@
 from typing import Optional
 
+
 class Term:
-    def __init__(self, location:str) -> None:
+    def __init__(self, location: str) -> None:
         self.location = location
 
-    def copy(self) -> 'Term':
+    def copy(self) -> "Term":
         return base_parse(str(self))
 
-    def compose(self, M: 'Term') -> None:
+    def compose(self, M: "Term") -> None:
         pass
 
     def free_values(self) -> set:
@@ -78,7 +79,7 @@ class Application(Term):
 
 
 class Abstraction(Term):
-    def __init__(self, location:str, value:str, body:Term) -> None:
+    def __init__(self, location: str, value: str, body: Term) -> None:
         self.value = value
         self.body = body
         super().__init__(location)
@@ -86,7 +87,9 @@ class Abstraction(Term):
     def __str__(self) -> str:
         return self.location + "<" + self.value + ">." + str(self.body)
 
-    def compose(self, M:Term) -> None:  # this needs to also check something to do with freeness
+    def compose(
+        self, M: Term
+    ) -> None:  # this needs to also check something to do with freeness
         if M and self.value in M.free_values():
             self.rename(self.value, generate_fresh())
         if self.body:
@@ -100,7 +103,7 @@ class Abstraction(Term):
         fv.discard(self.value)
         return fv
 
-    def rename(self, old:str, new:str):
+    def rename(self, old: str, new: str):
         if self.value == old:
             self.value = new
         self.body.rename(old, new)
@@ -109,8 +112,10 @@ class Abstraction(Term):
         return self.body.used_values() | {self.value}
 
 
-def substitute(term, new_term: Term, old_value: str) -> Term:  # returns rather than works in place
-    new_term = base_parse(str(new_term))
+def substitute(
+    term, new_term: Term, old_value: str
+) -> Term:  # returns rather than works in place
+    new_term = base_parse(str(new_term))  # creating a clean copy
     # print("sub")
     if isinstance(term, Variable):
         # print("into variable")
@@ -126,18 +131,25 @@ def substitute(term, new_term: Term, old_value: str) -> Term:  # returns rather 
         term.argument = substitute(term.argument, new_term, old_value)
         return term
     elif isinstance(term, Abstraction):
-        if term.value == old_value:
+        if (
+            term.value == old_value
+        ):  # instances of old_value here after are bound by this abstraction
             return term
         else:
-            if new_term == None or term.value not in new_term.free_values():
+            if (
+                new_term == None or term.value not in new_term.free_values()
+            ):  # checking that nothing in new_term gets captured
                 term.body = substitute(term.body, new_term, old_value)
                 return term
-            else:
+            else:  # If somethng in new_term would be captured, rename the abstraction.
                 term.rename(term.value, generate_fresh())
-
-                return None
+                term.body = substitute(
+                    term.body, new_term, old_value
+                )  # test thoroughly
+                return term
     else:
         # print("got to else")
+        # raise error?
         return None
 
 
@@ -218,8 +230,8 @@ def unpack_constants(t: Term) -> Term:  # term to term
     return None
 
 
-def ipr(l: list) -> Term:  # list->term
-    def do_operations(s: str) -> Term:  # str to term
+def ipr(l: list) -> Term:
+    def do_operations(s: str) -> Term:
         if ";" in s:
             l = s.split(";")
             # print(l)
